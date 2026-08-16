@@ -1,0 +1,27 @@
+# Maven build output
+target/
+
+# Java compiler output
+*.class
+
+# Native Image crash and diagnostic output
+hs_err_pid*
+replay_pid*
+svm_err_*
+
+# IDE metadata
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Local environment files
+.env
+.env.*
+!.env.example
