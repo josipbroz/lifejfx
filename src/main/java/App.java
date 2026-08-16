@@ -5,7 +5,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.StackPane;
+//import javafx.scene.layout.StackPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.geometry.Pos;
 import javafx.scene.paint.Color;
@@ -72,8 +73,7 @@ public class App extends Application {
         Map<Cell, Integer> counts = new HashMap<>();
         for (Cell cell : world) {
             for (Cell neighbor : neighbors(cell)) {
-                Cell wrappedNeighbor = new Cell(
-                        wrapCoordinate(neighbor.x(), columns),
+                Cell wrappedNeighbor = new Cell(wrapCoordinate(neighbor.x(), columns),
                         wrapCoordinate(neighbor.y(), rows));
                 counts.merge(wrappedNeighbor, 1, Integer::sum);
             }
@@ -88,21 +88,20 @@ public class App extends Application {
     static List<Cell> neighbors(Cell cell) {
         int x = cell.x();
         int y = cell.y();
-        return List.of(
-                new Cell(x - 1, y - 1), new Cell(x, y - 1), new Cell(x + 1, y - 1),
-                new Cell(x - 1, y),                         new Cell(x + 1, y),
-                new Cell(x - 1, y + 1), new Cell(x, y + 1), new Cell(x + 1, y + 1));
+        return List.of(new Cell(x - 1, y - 1), new Cell(x, y - 1), new Cell(x + 1, y - 1),
+                new Cell(x - 1, y), new Cell(x + 1, y), new Cell(x - 1, y + 1), new Cell(x, y + 1),
+                new Cell(x + 1, y + 1));
     }
 
-    static void drawWorld(GraphicsContext graphics, Set<Cell> world, int cellSize,
-                          int columns, int rows, double width, double height) {
+    static void drawWorld(GraphicsContext graphics, Set<Cell> world, int cellSize, int columns,
+            int rows, double width, double height) {
         graphics.setFill(Color.BLACK);
         graphics.fillRect(0, 0, width, height);
         graphics.setFill(Color.rgb(204, 85, 0));
         for (Cell cell : world) {
             if (cell.x() >= 0 && cell.x() < columns && cell.y() >= 0 && cell.y() < rows) {
-                graphics.fillRect(cell.x() * cellSize, cell.y() * cellSize,
-                        cellSize - 1, cellSize - 1);
+                graphics.fillRect(cell.x() * cellSize, cell.y() * cellSize, cellSize - 1,
+                        cellSize - 1);
             }
         }
     }
@@ -110,6 +109,7 @@ public class App extends Application {
     public static void main(String[] args) {
         launch(App.class, args);
     }
+
     @Override
     public void start(Stage stage) {
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
@@ -142,13 +142,18 @@ public class App extends Application {
         }
         drawWorld(graphics, world, cellSize, columns, rows, windowWidth, boardHeight);
 
-        Label generationLabel = new Label("Generation: 0");
-        generationLabel.setMaxWidth(Double.MAX_VALUE);
-        generationLabel.setPrefHeight(statusBarHeight);
+        Label generationLabel = new Label("Generation: 0 | Press P to pause");
         generationLabel.setAlignment(Pos.CENTER_LEFT);
-        generationLabel.setStyle(
-            "-fx-background-color: #1a1a1a; -fx-text-fill: #CC5500; -fx-padding: 0 10 0 10;");
+        generationLabel.setStyle("-fx-text-fill: #CC5500;");
+        Label exitLabel = new Label("Press ESC to exit");
+        exitLabel.setStyle("-fx-text-fill: #CC5500;");
+        BorderPane statusBar = new BorderPane();
+        statusBar.setPrefHeight(statusBarHeight);
+        statusBar.setStyle("-fx-background-color: #1a1a1a; -fx-padding: 0 10 0 10;");
+        statusBar.setLeft(generationLabel);
+        statusBar.setRight(exitLabel);
         int[] generation = {0};
+        boolean[] paused = {false};
 
         AnimationTimer animation = new AnimationTimer() {
             private static final long FRAME_INTERVAL = 100_000_000L;
@@ -157,26 +162,31 @@ public class App extends Application {
 
             @Override
             public void handle(long now) {
+                if (paused[0]) {
+                    return;
+                }
                 if (now - lastUpdate < FRAME_INTERVAL) {
                     return;
                 }
                 lastUpdate = now;
                 currentWorld = nextGeneration(currentWorld, columns, rows);
                 generation[0]++;
-                generationLabel.setText("Generation: " + generation[0]);
-                drawWorld(graphics, currentWorld, cellSize, columns, rows,
-                    windowWidth, boardHeight);
+                generationLabel.setText("Generation: " + generation[0] + " | Press P to pause");
+                drawWorld(graphics, currentWorld, cellSize, columns, rows, windowWidth,
+                        boardHeight);
             }
         };
 
-            VBox root = new VBox(canvas, generationLabel);
-            root.setAlignment(Pos.TOP_CENTER);
-            root.setFocusTraversable(true);
-            root.setStyle("-fx-background-color: black;");
+        VBox root = new VBox(canvas, statusBar);
+        root.setAlignment(Pos.TOP_CENTER);
+        root.setFocusTraversable(true);
+        root.setStyle("-fx-background-color: black;");
         stage.setTitle("JavaFX Life");
         Scene scene = new Scene(root, windowWidth, windowHeight);
         scene.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ESCAPE) {
+            if (event.getCode() == KeyCode.P) {
+                paused[0] = !paused[0];
+            } else if (event.getCode() == KeyCode.ESCAPE) {
                 animation.stop();
                 stage.close();
             }
