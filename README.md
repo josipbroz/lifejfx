@@ -10,6 +10,8 @@ GraalVM Runtime Environment Liberica-NIK-25.0.4-1 (build 25.0.4+10-LTS)
 Substrate VM Liberica-NIK-25.0.4-1 (build 25.0.4+10-LTS, serial gc)
 ```
 
+All code in this repository was written by AI.
+
 The Windows native executable hits this bug https://github.com/bell-sw/LibericaNIK/issues/37
 
 The jar works
